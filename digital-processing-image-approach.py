@@ -37,7 +37,7 @@ def resolve_captcha(path):
                        [1, 1, 0],
                        [0, 1, 0]])
     image = cv2.filter2D(image,-1,kernel)
-    cv2.imshow(path + 'erosion1', image)
+    # cv2.imshow(path + 'erosion1', image)
 
     text = pytesseract.image_to_string(image, config='-c tessedit_char_whitelist=0123456789abcdefghijklmnopqrstuvwxyz -psm 8')
     return text[:5]
@@ -50,7 +50,7 @@ def resolve_all():
         result = resolve_captcha(os.path.join(CAPTCHAS_PATH, captcha))
         print(str(solution == result ) + " = " + result + " " + solution)
 
-    cv2.waitKey(0)
+    # cv2.waitKey(0)
 
 if __name__ == "__main__":
     resolve_all()

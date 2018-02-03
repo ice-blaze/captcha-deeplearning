@@ -1,0 +1,7 @@
+version: '3'
+services:
+  dpi:
+    build: .
+    volumes:
+      - .:/code
+    command: python3 digital-processing-image-approach.py

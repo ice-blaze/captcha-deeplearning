@@ -1,0 +1,4 @@
+Pillow==2.2.1
+pytesseract==0.2.0
+opencv-python==3.4.0.12
+scikit-image==0.13.1
