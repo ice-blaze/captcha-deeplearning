@@ -2,6 +2,14 @@ version: '3'
 services:
   dpi:
     build: .
+    image: captcha:base
     volumes:
       - .:/code
     command: python3 digital-processing-image-approach.py
+
+  generate-captchas:
+    build: .
+    image: captcha:base
+    volumes:
+      - .:/code
+    command: python3 generate-captchas.py

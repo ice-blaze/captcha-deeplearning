@@ -12,6 +12,7 @@ import numpy as np
 from skimage.morphology import opening
 
 CAPTCHAS_PATH = "./real-captchas/"
+CAPTCHAS_PATH = "./generate-captcha/generated/"
 
 def resolve_captcha(path):
     image = cv2.imread(path, 0)
@@ -44,11 +45,20 @@ def resolve_captcha(path):
 
 
 def resolve_all():
-    captchas = os.listdir(CAPTCHAS_PATH)
+    captchas = os.listdir(CAPTCHAS_PATH)[:40]
+    true_counter = 0
+    total_counter = 0
     for captcha in captchas:
+        total_counter += 1
+        if total_counter%10 == 0:
+            print("10 done")
         solution = captcha[:-4]
         result = resolve_captcha(os.path.join(CAPTCHAS_PATH, captcha))
+        if solution == result:
+            true_counter += 1
         print(str(solution == result ) + " = " + result + " " + solution)
+
+    print(true_counter / len(captchas))
 
     # cv2.waitKey(0)
 
