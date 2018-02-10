@@ -1,15 +1,30 @@
 version: '3'
 services:
   dpi:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     image: captcha:base
+    working_dir: /code
     volumes:
       - .:/code
-    command: python3 digital-processing-image-approach.py
+    command: python3 digital_processing_image_approach.py
 
   generate-captchas:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     image: captcha:base
+    working_dir: /code
     volumes:
       - .:/code
-    command: python3 generate-captchas.py
+    command: python3 generate_captchas.py
+
+  deep-learning:
+    build:
+      context: .
+      dockerfile: Dockerfile-deep
+    working_dir: /code
+    volumes:
+      - .:/code
+    command: python3 deep_learning.py

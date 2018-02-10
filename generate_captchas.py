@@ -26,8 +26,8 @@ def generate_captchas(
         how_many=10,
         char_count=CHAR_COUNT,
         char_possibilities=CHAR_POSSIBILITIES,
-        base_image="./generate-captcha/base.png",
-        output_path="./generate-captcha/generated/",
+        base_image="./generate-captchas/base.png",
+        output_path="./generate-captchas/generated/",
 ):
     #DEBUG
     for file in os.listdir(output_path):
@@ -41,7 +41,7 @@ def generate_captchas(
     CHAR_WIDTH = 18
     START_X = 15
     START_Y = -4
-    font = ImageFont.truetype("frutiger-bold.ttf", 39)
+    font = ImageFont.truetype("./fonts/frutiger-bold.ttf", 39)
 
     base_image = Image.open(base_image)
 

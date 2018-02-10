@@ -12,7 +12,7 @@ import numpy as np
 from skimage.morphology import opening
 
 CAPTCHAS_PATH = "./real-captchas/"
-CAPTCHAS_PATH = "./generate-captcha/generated/"
+CAPTCHAS_PATH = "./generate-captchas/generated/"
 
 def resolve_captcha(path):
     image = cv2.imread(path, 0)
