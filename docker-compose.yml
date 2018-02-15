@@ -27,4 +27,5 @@ services:
     working_dir: /code
     volumes:
       - .:/code
+      - /dev/nvidia0:/dev/nvidia0
     command: python3 deep_learning.py

@@ -4,6 +4,7 @@ from PIL import ImageDraw
 import os, errno
 import random
 import itertools
+import uuid
 
 CHAR_POSSIBILITIES = "0123456789abcdefghijklmnopqrstuvwxyz"
 CHAR_COUNT = 5
@@ -29,6 +30,8 @@ def generate_captchas(
         base_image="./generate-captchas/base.png",
         output_path="./generate-captchas/generated/",
 ):
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
     #DEBUG
     for file in os.listdir(output_path):
         file_path = os.path.join(output_path, file)
@@ -53,7 +56,8 @@ def generate_captchas(
 
         # TODO draw a line
 
-        base.save(output_path + name + '.png')
+        id = str(uuid.uuid4()).replace("-", "")
+        base.save(output_path + name + '-' + id + '.png')
 
 
 def generate_all_possibilites(
@@ -72,4 +76,4 @@ def generate_all_possibilites(
 
 
 if __name__ == "__main__":
-    generate_captchas(20000)
+    generate_captchas(800000)
