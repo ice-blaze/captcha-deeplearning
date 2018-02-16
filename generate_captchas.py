@@ -41,18 +41,21 @@ def generate_captchas(
     try_create_folder(output_path)
 
     random_names = get_random_names(how_many, char_count, char_possibilities)
-    CHAR_WIDTH = 18
-    START_X = 15
+    CHAR_WIDTH_DELTA = 5
+    start_x = 16
     START_Y = -4
-    font = ImageFont.truetype("./fonts/frutiger-bold.ttf", 39)
+    font = ImageFont.truetype("./fonts/Frutiger-Black.otf", 42)
+
 
     base_image = Image.open(base_image)
 
     for name in random_names:
         base = base_image.copy()
         draw = ImageDraw.Draw(base)
-        for idx, letter in enumerate(name):
-            draw.text((START_X + (idx * CHAR_WIDTH), START_Y ), letter, (0, 0, 0), font=font)
+        for letter in name:
+            draw.text((start_x, START_Y ), letter, (0, 0, 0), font=font)
+            size = font.getsize(letter)[0]
+            start_x += size - CHAR_WIDTH_DELTA
 
         # TODO draw a line
 
