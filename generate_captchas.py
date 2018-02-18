@@ -6,6 +6,7 @@ import random
 import itertools
 import uuid
 import random
+import numpy as np
 
 CHAR_POSSIBILITIES = "0123456789abcdefghijklmnopqrstuvwxyz"
 CHAR_COUNT = 5
@@ -31,15 +32,58 @@ def try_create_folder(directory):
             raise
 
 
+def get_random_name(length, possibilities):
+    random_name = ''.join(random.SystemRandom().choice(possibilities) for _ in range(length))
+    return random_name
+
+
 def get_random_names(how_many=1, length=1, possibilities="ab"):
     for number in range(0, how_many):
-        random_name = ''.join(random.SystemRandom().choice(possibilities) for _ in range(length))
-        yield random_name
+        yield get_random_name(length, possibilities)
 
 
-def random_line(draw, color):
-    random_index = random.randint(0, len(ALL_LINES) - 1)
-    draw.line(ALL_LINES[random_index], fill=color, width=3)
+def get_random_names_and_lines(how_many=1, length=CHAR_COUNT, possibilities=CHAR_POSSIBILITIES):
+    how_many_codes = int(how_many / len(ALL_LINES))
+    how_many_images = how_many_codes * len(ALL_LINES)
+    print("New number of codes: " + str(how_many_codes))
+    print("New number of images: " + str(how_many_images))
+    random_names = get_random_names(how_many_codes, length, possibilities)
+    for random_name in random_names:
+        for line_idx in range(len(ALL_LINES)):
+            yield random_name + "-" + str(line_idx)
+
+
+def generate_captcha(
+        name,
+        line_idx,
+        base_image="./generate-captchas/base.png",
+):
+    CHAR_WIDTH_DELTA = 5
+    START_Y = -4
+    font = ImageFont.truetype("./fonts/Frutiger-Black.otf", 42)
+
+    base_image = Image.open(base_image)
+    color = (0, 0, 0)
+
+    start_x = 16
+    base = base_image.copy()
+    draw = ImageDraw.Draw(base)
+    for letter in name:
+        draw.text((start_x, START_Y ), letter, color, font=font)
+        size = font.getsize(letter)[0]
+        start_x += size - CHAR_WIDTH_DELTA
+
+    # draw line for the code
+    draw.line(ALL_LINES[int(line_idx)], fill=color, width=3)
+    return np.array(base)
+
+    # id = str(uuid.uuid4()).replace("-", "")
+    # line_base.save(output_path + random_name + '-' + id + '.png')
+
+
+def generate_save_captchas():
+    # TODO convert generate_catpchas to handle generate_captcha
+    pass
 
 
 def generate_captchas(
@@ -59,7 +103,7 @@ def generate_captchas(
 
     try_create_folder(output_path)
 
-    how_many_codes = int((how_many / len(ALL_LINES)) + 1)
+    how_many_codes = int(how_many / len(ALL_LINES))
     how_many_images = how_many_codes * len(ALL_LINES)
     print("New number of codes: " + str(how_many_codes))
     print("New number of images: " + str(how_many_images))
@@ -106,5 +150,5 @@ def generate_all_possibilites(
 
 
 if __name__ == "__main__":
-    # TODO generate one code with all possibles lines
-    generate_captchas(800000)
+    # generate_captchas(300000)
+    print(generate_captcha())

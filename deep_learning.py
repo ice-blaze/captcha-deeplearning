@@ -1,4 +1,6 @@
 from generate_captchas import CHAR_POSSIBILITIES
+from generate_captchas import generate_captcha
+from generate_captchas import get_random_names_and_lines
 import keras
 from keras.models import Sequential, load_model
 from keras.layers import Dense, Conv2D, MaxPooling2D, Flatten, Dropout, Convolution2D
@@ -6,6 +8,7 @@ from keras.utils import np_utils
 from keras.optimizers import SGD
 import os
 import imageio
+import random
 import numpy as np
 np.random.seed(123)  # for reproducibility
 
@@ -85,8 +88,6 @@ def num_to_char(captcha_num, char_count):
     return captcha_name
 
 def load_data_no_generator(GENERATED_CAPTCHA_PATH, CAPTCHAS, CHAR_COUNT):
-    # load data
-    NUM_CAPTCHA = len(CAPTCHAS)
     x = np.array([
         imageio.imread(GENERATED_CAPTCHA_PATH + captcha)
         for captcha in CAPTCHAS
@@ -111,19 +112,18 @@ def load_data_no_generator(GENERATED_CAPTCHA_PATH, CAPTCHAS, CHAR_COUNT):
     return x, y
 
 
-def load_data(GENERATED_CAPTCHA_PATH, CAPTCHAS, CHAR_COUNT, batch_size=100):
-    # load data
-    NUM_CAPTCHA = len(CAPTCHAS)
+def load_data(CAPTCHAS):
     while True:
         for captcha_chunk in CAPTCHAS:
             x = np.array([
-                imageio.imread(GENERATED_CAPTCHA_PATH + captcha)
+                # TODO opti possible
+                generate_captcha(captcha.split("-")[0], captcha.split("-")[1])
                 for captcha in captcha_chunk
             ])
 
             # Binarizide the labels (multi class)
             label_in_list = [
-                list(captcha[:CHAR_COUNT])
+                list(captcha.split("-")[0])
                 for captcha in captcha_chunk
             ]
             label_in_numlist = [
@@ -140,18 +140,19 @@ def load_data(GENERATED_CAPTCHA_PATH, CAPTCHAS, CHAR_COUNT, batch_size=100):
             yield x, y
 
 
-def main(number_of_captchas=None, model_path=None):
+def main(number_of_captchas=10, model_path=None):
     number_of_classes = len(CHAR_POSSIBILITIES)
-    PATH = "./generate-captchas/generated/"
-    CAPTCHAS = os.listdir(PATH)[:number_of_captchas]
+    # PATH = "./generate-captchas/generated/"
+    # CAPTCHAS = os.listdir(PATH)[:number_of_captchas]
+    CAPTCHAS = list(get_random_names_and_lines(number_of_captchas))
+    random.shuffle(CAPTCHAS)
     CHAR_COUNT = len(CAPTCHAS[0].split("-")[0])
     batch_size = 300
 
     pivot = int(len(CAPTCHAS) / 10)
     x_five, y_five = next(load_data(
-        PATH,
         [CAPTCHAS[:1]],
-        CHAR_COUNT,
+        # CHAR_COUNT,
     ))
 
     captchas_train = list(chunks(CAPTCHAS[pivot:], batch_size))
@@ -168,7 +169,7 @@ def main(number_of_captchas=None, model_path=None):
 
         epochs = 1
         model.fit_generator(
-            load_data(PATH, captchas_train, CHAR_COUNT, batch_size),
+            load_data(captchas_train),
             steps_per_epoch=len(captchas_train),
             epochs=epochs,
             verbose=1,
@@ -183,7 +184,7 @@ def main(number_of_captchas=None, model_path=None):
 
     # score = model.evaluate(x_test, y_test, verbose=1)  # Evaluate the trained model on the test set!
     score = model.evaluate_generator(
-        load_data(PATH, captchas_test, CHAR_COUNT),
+        load_data(captchas_test),
         steps=batch_size,
     )
 
@@ -227,7 +228,7 @@ def test_real(model_path):
 
 if __name__ == "__main__":
     model_path = "model.h5"
-    main(800000, model_path)
+    main(100000, model_path)
     # test_real(model_path)
 
     # returns a compiled model
