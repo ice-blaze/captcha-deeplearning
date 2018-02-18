@@ -13,31 +13,31 @@ np.random.seed(123)  # for reproducibility
 def create_model(input_shape, number_of_classes):
     model = Sequential()
     model.add(Conv2D(
-        32,
-        kernel_size=(9, 9),
+        64,
+        kernel_size=(3, 3),
         strides=(1, 1),
         activation='relu',
         input_shape=(input_shape)
     ))
 
-    model.add(Conv2D(32, (3, 3), padding="same", activation='relu'))
-    model.add(Conv2D(32, (3, 3), activation='relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
-    # model.add(Dropout(0.25))
-
     model.add(Conv2D(64, (3, 3), padding="same", activation='relu'))
     model.add(Conv2D(64, (3, 3), activation='relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+    model.add(MaxPooling2D(pool_size=(4, 4), strides=(4, 4)))
+    model.add(Dropout(0.5))
+
+    # model.add(Conv2D(64, (3, 3), padding="same", activation='relu'))
+    # model.add(Conv2D(64, (3, 3), activation='relu'))
+    # model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
     # model.add(Dropout(0.25))
-    model.add(Conv2D(128, (3, 3), padding="same", activation='relu'))
-    model.add(Conv2D(128, (3, 3), activation='relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
-    model.add(Conv2D(256, (3, 3), activation='relu'))
+    # model.add(Conv2D(128, (3, 3), padding="same", activation='relu'))
+    # model.add(Conv2D(128, (3, 3), activation='relu'))
+    # model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+    # model.add(Conv2D(256, (3, 3), activation='relu'))
     # model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 
     model.add(Flatten())
-    model.add(Dense(64*8*8, activation='relu'))
-    model.add(Dropout(0.5))
+    # model.add(Dense(64*8*8, activation='relu'))
+    # model.add(Dropout(0.5))
     model.add(Dense(number_of_classes, activation='softmax'))
 
     model.compile(
