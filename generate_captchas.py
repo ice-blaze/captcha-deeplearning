@@ -9,6 +9,12 @@ import random
 
 CHAR_POSSIBILITIES = "0123456789abcdefghijklmnopqrstuvwxyz"
 CHAR_COUNT = 5
+ALL_LINES = [
+    [(30,48), (34,25), (76,15), (259,23)],
+    [(30,1), (32,9), (40,15), (55,23), (147,35), (271,33)],
+    [(39,36), (42,17), (95,22), (271,31)],
+    [(30,16), (36,26), (65,25), (143,16), (205,15), (271,18)],
+]
 
 def try_create_folder(directory):
     try:
@@ -25,15 +31,8 @@ def get_random_names(how_many=1, length=1, possibilities="ab"):
 
 
 def random_line(draw, color):
-    all_lines = [
-        [(30,48), (34,25), (76,15), (259,23)],
-        [(30,1), (32,9), (40,15), (55,23), (147,35), (271,33)],
-        [(39,36), (42,17), (95,22), (271,31)],
-        [(30,16), (36,26), (65,25), (143,16), (205,15), (271,18)],
-    ]
-
-    random_index = random.randint(0, len(all_lines) - 1)
-    draw.line(all_lines[random_index], fill=color, width=3)
+    random_index = random.randint(0, len(ALL_LINES) - 1)
+    draw.line(ALL_LINES[random_index], fill=color, width=3)
 
 
 def generate_captchas(
@@ -53,7 +52,11 @@ def generate_captchas(
 
     try_create_folder(output_path)
 
-    random_names = get_random_names(how_many, char_count, char_possibilities)
+    how_many_codes = int((how_many / len(ALL_LINES)) + 1)
+    how_many_images = how_many_codes * len(ALL_LINES)
+    print("New number of codes: " + str(how_many_codes))
+    print("New number of images: " + str(how_many_images))
+    random_names = get_random_names(how_many_codes, char_count, char_possibilities)
     CHAR_WIDTH_DELTA = 5
     START_Y = -4
     font = ImageFont.truetype("./fonts/Frutiger-Black.otf", 42)
@@ -70,11 +73,14 @@ def generate_captchas(
             size = font.getsize(letter)[0]
             start_x += size - CHAR_WIDTH_DELTA
 
-        # TODO draw a line
-        random_line(draw, color)
+        # draw all possible lines for the code
+        for line in ALL_LINES:
+            line_base = base.copy()
+            draw = ImageDraw.Draw(line_base)
+            draw.line(line, fill=color, width=3)
 
-        id = str(uuid.uuid4()).replace("-", "")
-        base.save(output_path + name + '-' + id + '.png')
+            id = str(uuid.uuid4()).replace("-", "")
+            line_base.save(output_path + name + '-' + id + '.png')
 
 
 def generate_all_possibilites(
@@ -93,4 +99,5 @@ def generate_all_possibilites(
 
 
 if __name__ == "__main__":
+    # TODO generate one code with all possibles lines
     generate_captchas(800000)
