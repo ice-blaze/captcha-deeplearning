@@ -6,6 +6,7 @@ RUN apt-get update && apt-get install -y \
 	python3-dev \
 	libgtk2.0-dev \
 	tesseract-ocr \
+	libjpeg-dev \
 	python3-pip
 
 WORKDIR /code

@@ -3,3 +3,4 @@ pytesseract==0.2.0
 opencv-python==3.4.0.12
 scikit-image==0.13.1
 h5py==2.7.1
+requests==2.18.4
