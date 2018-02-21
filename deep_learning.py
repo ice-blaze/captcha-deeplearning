@@ -245,9 +245,21 @@ def print_test(model, path, captchas, char_count, max_size=100):
 
     predicted = [num_to_char(predict, char_count) for predict in allx[:max_size]]
     real = [num_to_char(real_label, char_count) for real_label in y[:max_size]]
-    ziper = zip(predicted, real)
+    ziper = zip(real, predicted)
+    correct = 0
+    mean_similar = 0
+    error_dict = {}
     for z in ziper:
-        print(str(z[0]==z[1]) + " " + str(z))
+        sim, sim_dict = similar(z[0], z[1])
+        mean_similar += sim
+        error_dict = add_dict(error_dict, sim_dict)
+        if z[0]==z[1]:
+            correct += 1
+        print(str(z[0]==z[1]) + " " + str(z) + " simili: " + str(sim))
+    print("overall: " + str(correct/len(predicted)))
+    print("overall similarity: " + str(mean_similar / len(predicted)))
+    print(error_dict)
+    print(sorted(error_dict.keys()))
 
 
 def test_real(model_path):
@@ -265,7 +277,8 @@ def test_real(model_path):
 
 if __name__ == "__main__":
     model_path = "model.h5"
-    main(100000, model_path)
+    # main(1600000, model_path)
+    main(800000, model_path)
     # test_real(model_path)
 
     # returns a compiled model
