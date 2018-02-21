@@ -1,6 +1,7 @@
 from generate_captchas import CHAR_POSSIBILITIES
 from generate_captchas import generate_captcha
 from generate_captchas import get_random_names_and_lines
+from digital_processing_image_approach import clean_image_kernel4
 import keras
 from keras.models import Sequential, load_model
 from keras.layers import Dense, Conv2D, MaxPooling2D, Flatten, Dropout, Convolution2D
@@ -125,7 +126,7 @@ def num_to_char(captcha_num, char_count):
 
 def load_data_no_generator(GENERATED_CAPTCHA_PATH, CAPTCHAS, CHAR_COUNT):
     x = np.array([
-        imageio.imread(GENERATED_CAPTCHA_PATH + captcha)
+        clean_image_kernel4(imageio.imread(GENERATED_CAPTCHA_PATH + captcha))
         for captcha in CAPTCHAS
     ])
 
@@ -153,7 +154,7 @@ def load_data(CAPTCHAS):
         for captcha_chunk in CAPTCHAS:
             x = np.array([
                 # TODO opti possible
-                generate_captcha(captcha.split("-")[0], captcha.split("-")[1])
+                clean_image_kernel4(generate_captcha(captcha.split("-")[0], captcha.split("-")[1]))
                 for captcha in captcha_chunk
             ])
 
