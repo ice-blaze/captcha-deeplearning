@@ -1,6 +1,7 @@
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
+import cv2
 import os, errno
 import random
 import itertools
@@ -8,7 +9,8 @@ import uuid
 import random
 import numpy as np
 
-CHAR_POSSIBILITIES = "0123456789abcdefghijklmnopqrstuvwxyz"
+# CHAR_POSSIBILITIES = "0123456789abcdefghijklmnopqrstuvwxyz"
+CHAR_POSSIBILITIES = "2345678abcdefgmnpwxy"
 CHAR_COUNT = 5
 ALL_LINES = [
     [(30,48), (34,25), (76,15), (259,23)],
@@ -56,25 +58,29 @@ def get_random_names_and_lines(how_many=1, length=CHAR_COUNT, possibilities=CHAR
 def generate_captcha(
         name,
         line_idx,
-        base_image="./generate-captchas/base.png",
+        base_image="./generate-captchas/base.jpg",
 ):
-    CHAR_WIDTH_DELTA = 5
-    START_Y = -4
-    font = ImageFont.truetype("./fonts/Frutiger-Black.otf", 42)
+    CHAR_WIDTH_DELTA = 3
+    START_Y = -3
+    font = ImageFont.truetype("./fonts/FrutigerBQ-Bold.otf", 42) # not bad
 
     base_image = Image.open(base_image)
     color = (0, 0, 0)
 
-    start_x = 16
+    start_x = 17
     base = base_image.copy()
     draw = ImageDraw.Draw(base)
     for letter in name:
+        if letter in ["n"]:
+            start_x -= 2
         draw.text((start_x, START_Y ), letter, color, font=font)
+        if letter in ["n", "m"]:
+            start_x -= 2
         size = font.getsize(letter)[0]
         start_x += size - CHAR_WIDTH_DELTA
 
     # draw line for the code
-    draw.line(ALL_LINES[int(line_idx)], fill=color, width=3)
+    draw.line(ALL_LINES[int(line_idx)], fill=color, width=4)
     return np.array(base)
 
     # id = str(uuid.uuid4()).replace("-", "")
@@ -108,7 +114,7 @@ def generate_captchas(
     print("New number of codes: " + str(how_many_codes))
     print("New number of images: " + str(how_many_images))
     random_names = get_random_names(how_many_codes, char_count, char_possibilities)
-    CHAR_WIDTH_DELTA = 5
+    CHAR_WIDTH_DELTA = 4
     START_Y = -4
     font = ImageFont.truetype("./fonts/Frutiger-Black.otf", 42)
 
@@ -123,6 +129,8 @@ def generate_captchas(
             draw.text((start_x, START_Y ), letter, color, font=font)
             size = font.getsize(letter)[0]
             start_x += size - CHAR_WIDTH_DELTA
+            if letter in ["n", "m", "d"]:
+                start_x -= 2
 
         # draw all possible lines for the code
         for line in ALL_LINES:
@@ -149,6 +157,25 @@ def generate_all_possibilites(
     print(len(all_possibilites))
 
 
+def check_generate_with_real_captcha(
+        real_captcha_path
+):
+    real_captcha_files = os.listdir(real_captcha_path)
+    random.shuffle(real_captcha_files)
+    for real_captcha_file in real_captcha_files[:1]:
+        code = real_captcha_file.split("-")[0]
+        line_idx = 0
+        generated_image = generate_captcha(code, line_idx)
+        real_image = cv2.imread(real_captcha_path + real_captcha_file, 0)
+
+        cv2.imshow('generated', generated_image)
+        cv2.imshow('real', real_image)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+
+
 if __name__ == "__main__":
     # generate_captchas(300000)
-    print(generate_captcha())
+    check_generate_with_real_captcha("./real-captchas/")
+    # print(generate_captcha())
