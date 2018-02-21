@@ -9,38 +9,74 @@ from keras.optimizers import SGD
 import os
 import imageio
 import random
+from difflib import SequenceMatcher
 import numpy as np
 np.random.seed(123)  # for reproducibility
+
+
+def add_dict(a, b):
+    for key in b:
+        a[key] = a.get(key, 0) + b[key]
+
+    return a
+
+def similar(real, predicted):
+    wrong_letter_count = 0
+
+    wrong_letter_dict = {}
+    for real_letter, preddicted_letter in zip(real, predicted):
+        if real_letter != preddicted_letter:
+            wrong_letter_dict[real_letter] = wrong_letter_dict.get(real_letter, 0) + 1
+            wrong_letter_count += 1
+
+    wrong_letter_count /= len(real)
+    wrong_letter_count = 1.0 - wrong_letter_count
+
+    return wrong_letter_count, wrong_letter_dict
 
 
 def create_model(input_shape, number_of_classes):
     model = Sequential()
     model.add(Conv2D(
-        64,
-        kernel_size=(3, 3),
+        20,
+        kernel_size=(5, 5),
+        padding="same",
         strides=(1, 1),
         activation='relu',
         input_shape=(input_shape)
     ))
+    # # First convolutional layer with max pooling
+    # model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+
+    # # Second convolutional layer with max pooling
+    # model.add(Conv2D(50, (5, 5), padding="same", activation="relu"))
+    # model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+
+    # # Hidden layer with 500 nodes
+    # model.add(Flatten())
+    # model.add(Dense(500, activation="relu"))
+
+    model.add(Conv2D(32, (3, 3), padding="same", activation='relu'))
+    model.add(Conv2D(32, (3, 3), activation='relu'))
+    model.add(MaxPooling2D(pool_size=(4, 4), strides=(4, 4)))
+    model.add(Dropout(0.25))
 
     model.add(Conv2D(64, (3, 3), padding="same", activation='relu'))
     model.add(Conv2D(64, (3, 3), activation='relu'))
-    model.add(MaxPooling2D(pool_size=(4, 4), strides=(4, 4)))
-    model.add(Dropout(0.5))
-
-    # model.add(Conv2D(64, (3, 3), padding="same", activation='relu'))
-    # model.add(Conv2D(64, (3, 3), activation='relu'))
-    # model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
-    # model.add(Dropout(0.25))
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+    model.add(Dropout(0.25))
+    model.add(Conv2D(128, (3, 3), padding="same", activation='relu'))
+    model.add(Conv2D(128, (3, 3), activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+    model.add(Dropout(0.25))
     # model.add(Conv2D(128, (3, 3), padding="same", activation='relu'))
     # model.add(Conv2D(128, (3, 3), activation='relu'))
     # model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
-    # model.add(Conv2D(256, (3, 3), activation='relu'))
-    # model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+    # model.add(Dropout(0.25))
 
     model.add(Flatten())
-    # model.add(Dense(64*8*8, activation='relu'))
-    # model.add(Dropout(0.5))
+    model.add(Dense(64*8*8, activation='relu'))
+    model.add(Dropout(0.5))
     model.add(Dense(number_of_classes, activation='softmax'))
 
     model.compile(
@@ -147,7 +183,7 @@ def main(number_of_captchas=10, model_path=None):
     CAPTCHAS = list(get_random_names_and_lines(number_of_captchas))
     random.shuffle(CAPTCHAS)
     CHAR_COUNT = len(CAPTCHAS[0].split("-")[0])
-    batch_size = 300
+    batch_size = 250
 
     pivot = int(len(CAPTCHAS) / 10)
     x_five, y_five = next(load_data(
