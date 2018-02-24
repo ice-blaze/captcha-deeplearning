@@ -1,108 +1,83 @@
-from PIL import Image
-from PIL import ImageEnhance
-import PIL.ImageOps
 import pytesseract
-import argparse
 import cv2
 import os
-import numpy
-import random
+import numpy as np
+
 from generate_captchas import CHAR_POSSIBILITIES
 
-import cv2
-import numpy as np
-from skimage.morphology import opening
-
 CAPTCHAS_PATH = "./real-captchas/"
-# CAPTCHAS_PATH = "./generate-captchas/generated/"
 CONFIG = "-c tessedit_char_whitelist=" + CHAR_POSSIBILITIES + " -psm 8"
 
+
 def clean_image_kernel4(image, start_letters=16, end_letters=135):
-    image = cv2.bitwise_not(image)
-    #image = cv2.imread('easy.png', 0)
-    kernel = np.ones((4,4), np.uint8)
+    """
+    :param image numpy array2d: image to clean
+    :param start_letters int: column index where the captcha start in the image
+    :param end_letters int: column index where the captcha end in the image
+    :return image numpy array2d: image cleaned
+    """
+    inverted_color_image = cv2.bitwise_not(image)
+    kernel_44 = np.ones((4, 4), np.uint8)
 
-    image = cv2.morphologyEx(image, cv2.MORPH_OPEN, kernel)
-    # cv2.imshow(path + 'closing', image)
+    image_morph_open = cv2.morphologyEx(
+        inverted_color_image, cv2.MORPH_OPEN, kernel_44
+    )
 
-    #opening_skimage = opening(image, kernel)
+    ret, image_threshold = cv2.threshold(
+        image_morph_open, 207, 255, cv2.THRESH_BINARY
+    )
+    image_eroded = cv2.erode(image_threshold, kernel_44, iterations=1)
+    image_morph_close = cv2.morphologyEx(
+        image_eroded, cv2.MORPH_CLOSE, kernel_44
+    )
 
-    #cv2.imshow('opening', opening)
-    ret,image = cv2.threshold(image,207,255,cv2.THRESH_BINARY)
-    image = cv2.erode(image,kernel,iterations = 1)
-    image = cv2.morphologyEx(image, cv2.MORPH_CLOSE, kernel)
-    #cv2.imshow(path + 'erosion1', image)
+    kernel_33 = np.array([
+        [0, 0, 1],
+        [1, 1, 0],
+        [0, 1, 0],
+    ])
+    image_filtered_kernel_33 = cv2.filter2D(image_morph_close, -1, kernel_33)
 
-    kernel = np.array([[0, 0, 1],
-                       [1, 1, 0],
-                       [0, 1, 0]])
-    image = cv2.filter2D(image,-1,kernel)
-    # image[:, end_letters:] = 0
-    # image[:, :start_letters] = 0
-    image = image[:, start_letters:end_letters]
-    image = image[:, :, :1]  # keep only one channel
-    # cv2.imshow(path+'closing->thresh', image)
-    # cv2.rectangle(img,(384,0),(510,128),(0,255,0),3)
+    image_crop_outside_captcha = image_filtered_kernel_33[
+        :, start_letters:end_letters]
+    image_keep_one_channel = image_crop_outside_captcha[:, :, :1]
 
-    # cv2.imshow(path + 'erosion1', image)
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
-    return image
-
-def clean_image_kernel3(image, start_letters=16, end_letters=135):
-    image = cv2.bitwise_not(image)
-    kernel = np.ones((3,3), np.uint8)
-
-    image = cv2.morphologyEx(image, cv2.MORPH_OPEN, kernel)
-    ret,image = cv2.threshold(image,207,255,cv2.THRESH_BINARY)
-
-    image = cv2.erode(image,kernel,iterations = 1)
-    image = cv2.morphologyEx(image, cv2.MORPH_CLOSE, kernel)
-
-    kernel = np.array([[0, 0, 1],
-                       [1, 1, 0],
-                       [0, 1, 0]])
-    image = cv2.filter2D(image,-1,kernel)
-    image[:, end_letters:] = 0
-    image[:, :start_letters] = 0
-    # cv2.imshow(path+'closing->thresh', image)
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
-
-    return image
+    return image_keep_one_channel
 
 
-def resolve_captcha(path):
-    image = cv2.imread(path, 0)
+def resolve_captcha(captcha_path, length_of_captcha=5):
+    """
+    :param captcha_path string: path of the captcha
+    :param length_of_captcha int: number of char in the captcha
+    :return captcha_code string: captcha code
+    """
+    image = cv2.imread(captcha_path, 0)
 
-    image = clean_image_kernel4(image)
+    image_cleaned = clean_image_kernel4(image)
 
-    text = pytesseract.image_to_string(image, config=CONFIG)
-    return text[:5]
+    captcha_code = pytesseract.image_to_string(image_cleaned, config=CONFIG)
+    return captcha_code[:length_of_captcha]
 
 
-def resolve_all():
-    captchas = os.listdir(CAPTCHAS_PATH)[:40]
+def resolve_all(max_captcha=10):
+    """
+    :param max_captcha int: maximum captcha to be resolved
+    """
+    captchas = os.listdir(CAPTCHAS_PATH)[:max_captcha]
     true_counter = 0
-    total_counter = 0
+    current_counter = 0
     for captcha in captchas:
-        total_counter += 1
-        if total_counter%10 == 0:
+        current_counter += 1
+        if current_counter % 10 == 0:
             print("10 done")
         solution = captcha.split("-")[0]
         result = resolve_captcha(os.path.join(CAPTCHAS_PATH, captcha))
         if solution == result:
             true_counter += 1
-        print(str(solution == result ) + " = " + result + " " + solution)
+        print(str(solution == result) + " = " + result + " " + solution)
 
     print(true_counter / len(captchas))
 
-    # cv2.waitKey(0)
 
 if __name__ == "__main__":
-    # captchas = os.listdir(CAPTCHAS_PATH)
-    # random.shuffle(captchas)
-    # for captcha in captchas[:5]:
-    #     resolve_captcha(CAPTCHAS_PATH + captcha)
-    #     resolve_captcha_kernel3(CAPTCHAS_PATH + captcha)
     resolve_all()
